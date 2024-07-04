@@ -4,6 +4,7 @@ import (
 	"golang-fiber-prisma/db"
 	"golang-fiber-prisma/lib"
 	"golang-fiber-prisma/middleware"
+	"golang-fiber-prisma/routes"
 	"log"
 	"os"
 	"time"
@@ -56,9 +57,7 @@ func main() {
 	app.Use(middleware.RateLimiter(60, 30))
 	app.Use(middleware.Cache(5))
 
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	routes.SetupRoutes(app, prisma)
 
 	if err := app.Listen(":" + port); err != nil {
 		log.Panic(err)
