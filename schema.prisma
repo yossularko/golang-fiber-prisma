@@ -1,0 +1,42 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator db {
+    provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+model User {
+    id        Int        @id @default(autoincrement())
+    name      String
+    email     String     @unique
+    password  String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    deletedAt DateTime?
+    HasRole   HasRoles[]
+}
+
+model Roles {
+    id        Int        @id @default(autoincrement())
+    name      String
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    deletedAt DateTime?
+    HasRole   HasRoles[]
+}
+
+model HasRoles {
+    id        Int       @id @default(autoincrement())
+    userId    Int
+    roleId    Int
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    User User  @relation(fields: [userId], references: [id])
+    Role Roles @relation(fields: [roleId], references: [id])
+
+    @@map("has_roles")
+}
