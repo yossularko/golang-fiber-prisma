@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"golang-fiber-prisma/app/roles"
 	"golang-fiber-prisma/app/users"
 	"golang-fiber-prisma/inits"
 
@@ -43,6 +44,7 @@ func setupApiRoutes(r *fiber.App) {
 	api.Get("/", HomeHandler)
 	api.Post("/", HomePostHandler)
 	users.Routes(api.Group("/users"))
+	roles.Routes(api.Group("/roles"))
 }
 
 func SetupRoutes(r *fiber.App) {

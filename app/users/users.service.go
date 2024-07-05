@@ -82,7 +82,7 @@ func GetAllUsersService(query UserQueryRequest) lib.ResponseData {
 	).Skip(offset).Take(query.PerPage).Exec(context.Background())
 
 	if err != nil {
-		lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
 	}
 
 	response := []UserResponse{}
