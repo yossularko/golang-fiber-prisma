@@ -1,7 +1,6 @@
 package users
 
 import (
-	"golang-fiber-prisma/db"
 	"golang-fiber-prisma/lib"
 	"strconv"
 
@@ -25,7 +24,7 @@ func requestQueryIndex(c *fiber.Ctx) (UserQueryRequest, error) {
 		return UserQueryRequest{}, errPageInt
 	}
 
-	perpageInt, errPerpageInt := strconv.Atoi(page)
+	perpageInt, errPerpageInt := strconv.Atoi(perPage)
 
 	if errPerpageInt != nil {
 		return UserQueryRequest{}, errPerpageInt
@@ -40,7 +39,7 @@ func requestQueryIndex(c *fiber.Ctx) (UserQueryRequest, error) {
 	return query, nil
 }
 
-func IndexHandler(c *fiber.Ctx, prisma *db.PrismaClient) error {
+func IndexHandler(c *fiber.Ctx) error {
 	q, err := requestQueryIndex(c)
 
 	if err != nil {
@@ -52,15 +51,15 @@ func IndexHandler(c *fiber.Ctx, prisma *db.PrismaClient) error {
 		)
 	}
 
-	result := GetAllUsersService(q, prisma)
+	result := GetAllUsersService(q)
 	return c.Status(result.StatusCode).JSON(result)
 }
 
-func StoreHandler(c *fiber.Ctx, prisma *db.PrismaClient) error {
+func StoreHandler(c *fiber.Ctx) error {
 	var user UserRequest
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
-	result := CreateOneService(user, prisma)
+	result := CreateOneService(user)
 	return c.Status(result.StatusCode).JSON(result)
 }

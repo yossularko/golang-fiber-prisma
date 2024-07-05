@@ -2,6 +2,7 @@ package main
 
 import (
 	"golang-fiber-prisma/db"
+	"golang-fiber-prisma/inits"
 	"golang-fiber-prisma/lib"
 	"golang-fiber-prisma/middleware"
 	"golang-fiber-prisma/routes"
@@ -12,16 +13,12 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/joho/godotenv"
 )
 
-var prisma *db.PrismaClient
-
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	inits.LoadEnv()
+	inits.PrismaInit()
+	inits.ValidateInit()
 }
 
 func fiberConfig() fiber.Config {
@@ -40,24 +37,19 @@ func main() {
 		port = "3000"
 	}
 
-	prisma = db.NewClient()
-	err := lib.ConnectToDatabase(prisma)
-	if err != nil {
-		log.Fatal(err)
-	}
 	defer func(prisma *db.PrismaClient) {
 		err := lib.DisconnectFromDatabase(prisma)
 		if err != nil {
 			log.Fatal(err)
 		}
-	}(prisma)
+	}(inits.Prisma)
 
 	app := fiber.New(fiberConfig())
 	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
 	app.Use(middleware.RateLimiter(60, 30))
 	app.Use(middleware.Cache(5))
 
-	routes.SetupRoutes(app, prisma)
+	routes.SetupRoutes(app)
 
 	if err := app.Listen(":" + port); err != nil {
 		log.Panic(err)

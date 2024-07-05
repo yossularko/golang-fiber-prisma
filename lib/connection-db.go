@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"fmt"
 	"golang-fiber-prisma/db"
 	"log"
 )
@@ -15,6 +16,7 @@ func ConnectToDatabase(prisma *db.PrismaClient) error {
 }
 
 func DisconnectFromDatabase(prisma *db.PrismaClient) error {
+	fmt.Println("close db")
 	err := prisma.Disconnect()
 	if err != nil {
 		log.Fatal(err)
