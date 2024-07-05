@@ -156,25 +156,52 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 }
 
 func UpdateOneService(id int, data UserRequest) lib.ResponseData {
-	_, errCheck := getOne(id, "")
+	initUser, errCheck := getOne(id, "")
 
 	if errCheck != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
 	}
 
-	var newPass string
+	if data.Name != "" {
+		errs := inits.Validate.Var(data.Name, "min=5,max=30")
+		if errs != nil {
+			return lib.ResponseError(lib.ResponseProps{
+				Code:    fiber.StatusBadRequest,
+				Message: inits.ParseVarValidate("name", errs),
+			})
+		}
+		initUser.Name = data.Name
+	}
+
+	if data.Email != "" {
+		errs := inits.Validate.Var(data.Email, "required,email")
+		if errs != nil {
+			return lib.ResponseError(lib.ResponseProps{
+				Code:    fiber.StatusBadRequest,
+				Message: inits.ParseVarValidate("email", errs),
+			})
+		}
+		initUser.Email = data.Email
+	}
 
 	if data.Password != "" {
+		errs := inits.Validate.Var(data.Password, "min=8,max=20")
+		if errs != nil {
+			return lib.ResponseError(lib.ResponseProps{
+				Code:    fiber.StatusBadRequest,
+				Message: inits.ParseVarValidate("password", errs),
+			})
+		}
 		hashPasswrd, _ := lib.HashPassword(data.Password)
-		newPass = hashPasswrd
+		initUser.Password = hashPasswrd
 	}
 
 	user, err := inits.Prisma.User.FindUnique(
 		db.User.ID.Equals(id),
 	).Update(
-		db.User.Name.Set(data.Name),
-		db.User.Email.Set(data.Email),
-		db.User.Password.Set(newPass),
+		db.User.Name.Set(initUser.Name),
+		db.User.Email.Set(initUser.Email),
+		db.User.Password.Set(initUser.Password),
 	).Exec(context.Background())
 
 	if err != nil {

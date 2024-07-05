@@ -8,4 +8,5 @@ func Routes(r fiber.Router) {
 	r.Get("/", GetAllUser)
 	r.Get("/:id", GetUser)
 	r.Post("/", CreateUser)
+	r.Patch("/:id", UpdateUser)
 }

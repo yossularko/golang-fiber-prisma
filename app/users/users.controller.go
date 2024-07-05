@@ -76,3 +76,21 @@ func CreateUser(c *fiber.Ctx) error {
 	result := CreateOneService(user)
 	return c.Status(result.StatusCode).JSON(result)
 }
+
+func UpdateUser(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	idInt, errInt := strconv.Atoi(id)
+
+	if errInt != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errInt.Error()})
+	}
+
+	var user UserRequest
+	if err := c.BodyParser(&user); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	result := UpdateOneService(idInt, user)
+	return c.Status(result.StatusCode).JSON(result)
+}

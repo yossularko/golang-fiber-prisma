@@ -41,3 +41,29 @@ func MyValidate(s interface{}) error {
 
 	return nil
 }
+
+func ParseVarValidate(field string, err error) string {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("errparse var validate:", r.(error).Error())
+			return
+		}
+	}()
+
+	errMsgs := make([]string, 0)
+
+	for _, elm := range err.(validator.ValidationErrors) {
+		param := elm.Param()
+		if param != "" {
+			param = fmt.Sprintf(" %s", param)
+		}
+		errMsgs = append(errMsgs, fmt.Sprintf(
+			"[%s] is '%s%s'",
+			field,
+			elm.Tag(),
+			param,
+		))
+	}
+
+	return strings.Join(errMsgs, ", ")
+}
