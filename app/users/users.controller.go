@@ -55,6 +55,19 @@ func GetAllUser(c *fiber.Ctx) error {
 	return c.Status(result.StatusCode).JSON(result)
 }
 
+func GetUser(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	idInt, errInt := strconv.Atoi(id)
+
+	if errInt != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errInt.Error()})
+	}
+
+	result := GetUserByIdService(idInt)
+	return c.Status(result.StatusCode).JSON(result)
+}
+
 func CreateUser(c *fiber.Ctx) error {
 	var user UserRequest
 	if err := c.BodyParser(&user); err != nil {

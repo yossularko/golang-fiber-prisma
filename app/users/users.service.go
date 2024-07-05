@@ -104,7 +104,7 @@ func GetUserByIdService(id int) lib.ResponseData {
 	user, err := getOne(id, "")
 
 	if err != nil {
-		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: err.Error()})
 	}
 
 	response := UserResponse{
@@ -159,7 +159,7 @@ func UpdateOneService(id int, data UserRequest) lib.ResponseData {
 	_, errCheck := getOne(id, "")
 
 	if errCheck != nil {
-		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: errCheck.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
 	}
 
 	var newPass string
@@ -196,7 +196,7 @@ func DeleteOneService(id int, data UserRequest) lib.ResponseData {
 	_, errCheck := getOne(id, "")
 
 	if errCheck != nil {
-		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: errCheck.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
 	}
 
 	user, err := inits.Prisma.User.FindUnique(
