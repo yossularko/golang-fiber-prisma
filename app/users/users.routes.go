@@ -5,6 +5,6 @@ import (
 )
 
 func Routes(r fiber.Router) {
-	r.Get("/", IndexHandler)
-	r.Post("/", StoreHandler)
+	r.Get("/", GetAllUser)
+	r.Post("/", CreateUser)
 }

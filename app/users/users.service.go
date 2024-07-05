@@ -1,8 +1,11 @@
 package users
 
 import (
+	"context"
+	"golang-fiber-prisma/db"
 	"golang-fiber-prisma/inits"
 	"golang-fiber-prisma/lib"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -40,14 +43,79 @@ import (
 // 	return errors
 // }
 
+func getOne(id int, email string) (*db.UserModel, error) {
+	var whereUnique db.UserEqualsUniqueWhereParam
+
+	if email == "" {
+		whereUnique = db.User.ID.Equals(id)
+	} else {
+		whereUnique = db.User.Email.Equals(email)
+	}
+
+	user, err := inits.Prisma.User.FindUnique(whereUnique).Exec(context.Background())
+
+	if err != nil {
+		return &db.UserModel{}, err
+	}
+
+	if err := lib.CheckDeletedRecord(user.DeletedAt()); err != nil {
+		return &db.UserModel{}, err
+	}
+
+	return user, nil
+}
+
 func GetAllUsersService(query UserQueryRequest) lib.ResponseData {
-	users, err := GetAllUsers(query)
+	offset := (query.Page - 1) * query.PerPage
+	users, err := inits.Prisma.User.FindMany(
+		db.User.DeletedAt.IsNull(),
+		db.User.Name.Contains(query.Name),
+		db.User.Email.Contains(query.Email),
+	).OrderBy(
+		db.User.CreatedAt.Order(db.DESC),
+	).Select(
+		db.User.ID.Field(),
+		db.User.Name.Field(),
+		db.User.Email.Field(),
+		db.User.CreatedAt.Field(),
+		db.User.UpdatedAt.Field(),
+	).Skip(offset).Take(query.PerPage).Exec(context.Background())
 
 	if err != nil {
 		lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
 	}
 
-	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: users})
+	response := []UserResponse{}
+
+	for _, user := range users {
+		response = append(response, UserResponse{
+			ID:        user.ID,
+			Name:      user.Name,
+			Email:     user.Email,
+			CreatedAt: user.CreatedAt,
+			UpdatedAt: user.UpdatedAt,
+		})
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
+}
+
+func GetUserByIdService(id int) lib.ResponseData {
+	user, err := getOne(id, "")
+
+	if err != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+	}
+
+	response := UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
 }
 
 func CreateOneService(user UserRequest) lib.ResponseData {
@@ -57,7 +125,7 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 	}
 
 	// check if email already exist
-	_, errUsrCekEmail := GetUserByEmail(user.Email)
+	_, errUsrCekEmail := getOne(0, user.Email)
 
 	if errUsrCekEmail == nil {
 		message := "Email already exist"
@@ -65,15 +133,89 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 	}
 
 	hashPasswrd, _ := lib.HashPassword(user.Password)
-	newUser, err := CreateOne(UserRequest{
-		Name:     user.Name,
-		Email:    user.Email,
-		Password: hashPasswrd,
-	})
+
+	newUser, err := inits.Prisma.User.CreateOne(
+		db.User.Name.Set(user.Name),
+		db.User.Email.Set(user.Email),
+		db.User.Password.Set(hashPasswrd),
+	).Exec(context.Background())
 
 	if err != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusConflict, Message: err.Error()})
 	}
 
-	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusCreated, Data: newUser})
+	response := UserResponse{
+		ID:        newUser.ID,
+		Name:      newUser.Name,
+		Email:     newUser.Email,
+		CreatedAt: newUser.CreatedAt,
+		UpdatedAt: newUser.UpdatedAt,
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusCreated, Data: response})
+}
+
+func UpdateOneService(id int, data UserRequest) lib.ResponseData {
+	_, errCheck := getOne(id, "")
+
+	if errCheck != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: errCheck.Error()})
+	}
+
+	var newPass string
+
+	if data.Password != "" {
+		hashPasswrd, _ := lib.HashPassword(data.Password)
+		newPass = hashPasswrd
+	}
+
+	user, err := inits.Prisma.User.FindUnique(
+		db.User.ID.Equals(id),
+	).Update(
+		db.User.Name.Set(data.Name),
+		db.User.Email.Set(data.Email),
+		db.User.Password.Set(newPass),
+	).Exec(context.Background())
+
+	if err != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+	}
+
+	response := UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
+}
+
+func DeleteOneService(id int, data UserRequest) lib.ResponseData {
+	_, errCheck := getOne(id, "")
+
+	if errCheck != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: errCheck.Error()})
+	}
+
+	user, err := inits.Prisma.User.FindUnique(
+		db.User.ID.Equals(id),
+	).Update(
+		db.User.DeletedAt.Set(time.Now()),
+	).Exec(context.Background())
+
+	if err != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+	}
+
+	response := UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
 }

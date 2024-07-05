@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func requestQueryIndex(c *fiber.Ctx) (UserQueryRequest, error) {
+func requestQueryGetAll(c *fiber.Ctx) (UserQueryRequest, error) {
 	q := c.Queries()
 	perPage := q["per_page"]
 	page := q["page"]
@@ -39,8 +39,8 @@ func requestQueryIndex(c *fiber.Ctx) (UserQueryRequest, error) {
 	return query, nil
 }
 
-func IndexHandler(c *fiber.Ctx) error {
-	q, err := requestQueryIndex(c)
+func GetAllUser(c *fiber.Ctx) error {
+	q, err := requestQueryGetAll(c)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(
@@ -55,7 +55,7 @@ func IndexHandler(c *fiber.Ctx) error {
 	return c.Status(result.StatusCode).JSON(result)
 }
 
-func StoreHandler(c *fiber.Ctx) error {
+func CreateUser(c *fiber.Ctx) error {
 	var user UserRequest
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
