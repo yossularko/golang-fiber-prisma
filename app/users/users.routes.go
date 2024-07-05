@@ -9,4 +9,5 @@ func Routes(r fiber.Router) {
 	r.Get("/:id", GetUser)
 	r.Post("/", CreateUser)
 	r.Patch("/:id", UpdateUser)
+	r.Delete("/:id", DeleteUser)
 }

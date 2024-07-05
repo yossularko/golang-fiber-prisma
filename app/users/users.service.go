@@ -219,7 +219,7 @@ func UpdateOneService(id int, data UserRequest) lib.ResponseData {
 	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
 }
 
-func DeleteOneService(id int, data UserRequest) lib.ResponseData {
+func DeleteOneService(id int) lib.ResponseData {
 	_, errCheck := getOne(id, "")
 
 	if errCheck != nil {
