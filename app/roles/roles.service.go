@@ -5,7 +5,6 @@ import (
 	"golang-fiber-prisma/db"
 	"golang-fiber-prisma/inits"
 	"golang-fiber-prisma/lib"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -35,10 +34,7 @@ func getOne(id int, name string) (*db.RolesModel, error) {
 func GetAllRolesService(query RoleQueryRequest) lib.ResponseData {
 	offset := (query.Page - 1) * query.PerPage
 	roles, err := inits.Prisma.Roles.FindMany(
-		db.Roles.Or(
-			db.Roles.DeletedAt.IsNull(),
-			db.Roles.DeletedAt.Equals(time.Time{}),
-		),
+		db.Roles.DeletedAt.IsNull(),
 		db.Roles.Name.Contains(query.Name),
 	).OrderBy(
 		db.Roles.Name.Order(db.ASC),
