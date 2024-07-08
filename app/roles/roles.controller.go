@@ -66,3 +66,43 @@ func GetRole(c *fiber.Ctx) error {
 	result := GetRoleByIdService(idInt)
 	return c.Status(result.StatusCode).JSON(result)
 }
+
+func CreateRole(c *fiber.Ctx) error {
+	var body RoleRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	result := CreateOneService(body)
+	return c.Status(result.StatusCode).JSON(result)
+}
+
+func UpdateRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	idInt, errInt := strconv.Atoi(id)
+
+	if errInt != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errInt.Error()})
+	}
+
+	var body RoleRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	result := UpdateOneService(idInt, body)
+	return c.Status(result.StatusCode).JSON(result)
+}
+
+func DeleteRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	idInt, errInt := strconv.Atoi(id)
+
+	if errInt != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": errInt.Error()})
+	}
+
+	result := DeleteOneService(idInt)
+	return c.Status(result.StatusCode).JSON(result)
+}

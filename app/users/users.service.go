@@ -141,7 +141,7 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 	).Exec(context.Background())
 
 	if err != nil {
-		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusConflict, Message: err.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
 	}
 
 	response := UserResponse{
