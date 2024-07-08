@@ -18,10 +18,6 @@ func getHasRoleOne(id int) (*db.HasRolesModel, error) {
 		return &db.HasRolesModel{}, err
 	}
 
-	if err := lib.CheckDeletedRecord(hasRole.DeletedAt()); err != nil {
-		return &db.HasRolesModel{}, err
-	}
-
 	return hasRole, nil
 }
 
@@ -238,7 +234,7 @@ func UpdateOneService(id int, body HasRolesRequest) lib.ResponseData {
 		Exec(context.Background())
 
 	if err != nil {
-		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: err.Error()})
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
 	}
 
 	response := HasRolesWithRelations{
@@ -259,4 +255,26 @@ func UpdateOneService(id int, body HasRolesRequest) lib.ResponseData {
 	}
 
 	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
+}
+
+func DeleteOneService(id int) lib.ResponseData {
+	// check role
+	_, errCheck := getHasRoleOne(id)
+
+	if errCheck != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
+	}
+
+	_, err := inits.Prisma.HasRoles.
+		FindUnique(
+			db.HasRoles.ID.Equals(id),
+		).
+		Delete().
+		Exec(context.Background())
+
+	if err != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Message: "Has role deleted successfully"})
 }

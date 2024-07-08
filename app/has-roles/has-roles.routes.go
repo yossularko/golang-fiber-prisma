@@ -7,4 +7,5 @@ func Routes(r fiber.Router) {
 	r.Get("/user/:userId", GetHasRolesByUserId)
 	r.Post("/", CreateHasRole)
 	r.Patch("/:id", UpdateHasRole)
+	r.Delete("/:id", DeleteHasRole)
 }

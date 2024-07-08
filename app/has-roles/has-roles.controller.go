@@ -58,3 +58,16 @@ func UpdateHasRole(c *fiber.Ctx) error {
 	result := UpdateOneService(idInt, body)
 	return c.Status(result.StatusCode).JSON(result)
 }
+
+func DeleteHasRole(c *fiber.Ctx) error {
+	id := c.Params("id")
+
+	idInt, errInt := strconv.Atoi(id)
+
+	if errInt != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": errInt.Error()})
+	}
+
+	result := DeleteOneService(idInt)
+	return c.Status(result.StatusCode).JSON(result)
+}
