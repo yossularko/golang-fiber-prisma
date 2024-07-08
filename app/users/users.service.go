@@ -43,7 +43,7 @@ import (
 // 	return errors
 // }
 
-func getOne(id int, email string) (*db.UserModel, error) {
+func GetUserOne(id int, email string) (*db.UserModel, error) {
 	var whereUnique db.UserEqualsUniqueWhereParam
 
 	if email == "" {
@@ -101,7 +101,7 @@ func GetAllUsersService(query UserQueryRequest) lib.ResponseData {
 }
 
 func GetUserByIdService(id int) lib.ResponseData {
-	user, err := getOne(id, "")
+	user, err := GetUserOne(id, "")
 
 	if err != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: err.Error()})
@@ -125,7 +125,7 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 	}
 
 	// check if email already exist
-	_, errUsrCekEmail := getOne(0, user.Email)
+	_, errUsrCekEmail := GetUserOne(0, user.Email)
 
 	if errUsrCekEmail == nil {
 		message := "Email already exist"
@@ -156,7 +156,7 @@ func CreateOneService(user UserRequest) lib.ResponseData {
 }
 
 func UpdateOneService(id int, data UserRequest) lib.ResponseData {
-	initUser, errCheck := getOne(id, "")
+	initUser, errCheck := GetUserOne(id, "")
 
 	if errCheck != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
@@ -220,7 +220,7 @@ func UpdateOneService(id int, data UserRequest) lib.ResponseData {
 }
 
 func DeleteOneService(id int) lib.ResponseData {
-	_, errCheck := getOne(id, "")
+	_, errCheck := GetUserOne(id, "")
 
 	if errCheck != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})

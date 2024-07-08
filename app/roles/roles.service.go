@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func getOne(id int, name string) (*db.RolesModel, error) {
+func GetRoleOne(id int, name string) (*db.RolesModel, error) {
 	var whereUnique db.RolesEqualsUniqueWhereParam
 
 	if name == "" {
@@ -49,7 +49,7 @@ func GetAllRolesService(query RoleQueryRequest) lib.ResponseData {
 }
 
 func GetRoleByIdService(id int) lib.ResponseData {
-	role, err := getOne(id, "")
+	role, err := GetRoleOne(id, "")
 
 	if err != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusInternalServerError, Message: err.Error()})
@@ -65,7 +65,7 @@ func CreateOneService(body RoleRequest) lib.ResponseData {
 	}
 
 	// check if role exist
-	_, errRoleCheck := getOne(0, body.Name)
+	_, errRoleCheck := GetRoleOne(0, body.Name)
 
 	if errRoleCheck == nil {
 		message := "Role already exist"
@@ -90,7 +90,7 @@ func UpdateOneService(id int, body RoleRequest) lib.ResponseData {
 	}
 
 	// check role
-	_, errCheck := getOne(id, "")
+	_, errCheck := GetRoleOne(id, "")
 
 	if errCheck != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
@@ -110,7 +110,7 @@ func UpdateOneService(id int, body RoleRequest) lib.ResponseData {
 
 func DeleteOneService(id int) lib.ResponseData {
 	// check role
-	_, errCheck := getOne(id, "")
+	_, errCheck := GetRoleOne(id, "")
 
 	if errCheck != nil {
 		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})

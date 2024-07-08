@@ -13,6 +13,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func init() {
@@ -48,6 +49,7 @@ func main() {
 	app.Use(cors.New(cors.Config{AllowOrigins: "*"}))
 	app.Use(middleware.RateLimiter(60, 30))
 	app.Use(middleware.Cache(5))
+	app.Use(logger.New())
 
 	routes.SetupRoutes(app)
 
