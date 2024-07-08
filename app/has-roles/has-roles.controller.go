@@ -31,3 +31,12 @@ func GetHasRolesByUserId(c *fiber.Ctx) error {
 	result := GetHasRolesByUserIdService(usrIdInt)
 	return c.Status(result.StatusCode).JSON(result)
 }
+
+func CreateHasRole(c *fiber.Ctx) error {
+	var body HasRolesRequest
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	result := CreateOneService(body)
+	return c.Status(result.StatusCode).JSON(result)
+}
