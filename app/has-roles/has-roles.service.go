@@ -11,6 +11,20 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+func getHasRoleOne(id int) (*db.HasRolesModel, error) {
+	hasRole, err := inits.Prisma.HasRoles.FindUnique(db.HasRoles.ID.Equals(id)).Exec(context.Background())
+
+	if err != nil {
+		return &db.HasRolesModel{}, err
+	}
+
+	if err := lib.CheckDeletedRecord(hasRole.DeletedAt()); err != nil {
+		return &db.HasRolesModel{}, err
+	}
+
+	return hasRole, nil
+}
+
 func findByUserAndRole(userId int, roleId int) (*db.HasRolesModel, error) {
 	data, err := inits.Prisma.HasRoles.
 		FindFirst(
@@ -173,6 +187,74 @@ func CreateOneService(body HasRolesRequest) lib.ResponseData {
 			ID:    dataCreated.User().ID,
 			Name:  dataCreated.User().Name,
 			Email: dataCreated.User().Email,
+		},
+	}
+
+	return lib.ResponseSuccess(lib.ResponseProps{Code: fiber.StatusOK, Data: response})
+}
+
+func UpdateOneService(id int, body HasRolesRequest) lib.ResponseData {
+	// validate user input
+	if errValidate := inits.MyValidate(body); errValidate != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusBadRequest, Message: errValidate.Error()})
+	}
+
+	// check role
+	_, errCheck := getHasRoleOne(id)
+
+	if errCheck != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: errCheck.Error()})
+	}
+
+	_, errCheckExist := findByUserAndRole(body.UserId, body.RoleId)
+
+	if errCheckExist == nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusConflict, Message: "User already has this role"})
+	}
+
+	newHasRole, err := inits.Prisma.HasRoles.
+		FindUnique(
+			db.HasRoles.ID.Equals(id),
+		).
+		With(
+			db.HasRoles.Role.Fetch().Select(
+				db.Roles.ID.Field(),
+				db.Roles.Name.Field(),
+			),
+			db.HasRoles.User.Fetch().Select(
+				db.User.ID.Field(),
+				db.User.Name.Field(),
+				db.User.Email.Field(),
+			),
+		).
+		Update(
+			db.HasRoles.User.Link(
+				db.User.ID.Equals(body.UserId),
+			),
+			db.HasRoles.Role.Link(
+				db.Roles.ID.Equals(body.RoleId),
+			),
+		).
+		Exec(context.Background())
+
+	if err != nil {
+		return lib.ResponseError(lib.ResponseProps{Code: fiber.StatusNotFound, Message: err.Error()})
+	}
+
+	response := HasRolesWithRelations{
+		ID:        newHasRole.ID,
+		RoleId:    newHasRole.RoleID,
+		UserId:    newHasRole.UserID,
+		CreatedAt: newHasRole.CreatedAt,
+		UpdatedAt: newHasRole.UpdatedAt,
+		Role: RolesInResponse{
+			ID:   newHasRole.Role().ID,
+			Name: newHasRole.Role().Name,
+		},
+		User: UserInResponse{
+			ID:    newHasRole.User().ID,
+			Name:  newHasRole.User().Name,
+			Email: newHasRole.User().Email,
 		},
 	}
 
